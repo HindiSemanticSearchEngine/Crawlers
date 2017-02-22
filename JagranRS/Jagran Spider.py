@@ -4,6 +4,7 @@ import hashlib
 from datetime import datetime
 from pymongo import MongoClient
 from re import findall
+import os.path
 
 header = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0'}
 client = MongoClient()
@@ -36,6 +37,7 @@ def write_logs_to_file(url, success, reason):
 
 def get_links_from_page(link, write_to_file):
     print "Getting Page List: " + link
+    # noinspection PyUnusedLocal
     tree = ''
     try:
         page = requests.get(link, headers=header)
@@ -61,6 +63,7 @@ def get_links_from_page(link, write_to_file):
 
 def get_info_from_page(link):
     print "Getting page: " + link
+    # noinspection PyUnusedLocal
     tree = ''
     try:
         page = requests.get(link, headers=header)
@@ -95,6 +98,9 @@ def get_info_from_page(link):
         meta_description = tree.xpath('//meta[@property="og:description"]/@content')
         meta_description = meta_description[0].encode('utf-8')
 
+        image = tree.xpath('//div[@id="jagran_image_id"]/img/@src')
+        image = image[0]
+
         all_descriptions = tree.xpath('//div[@class="article-content"]/p/text()')
         description = ''
         for i in xrange(0, len(all_descriptions)):
@@ -109,7 +115,8 @@ def get_info_from_page(link):
             'summary': summary,
             'last_modified': last_modified,
             'url': url,
-            'keywords': keywords
+            'keywords': keywords,
+            'image': image
         }
         add_to_database(data_set)
     except Exception as e:
@@ -136,6 +143,14 @@ if __name__ == '__main__':
     result = get_links_from_page('http://www.jagran.com/search/news-page', False)
     for j in xrange(0, len(currentPageLinks)):
         get_info_from_page(currentPageLinks[j])
+
+    if os.path.isfile('JagranLastUrl.txt'):
+        print "File exists"
+    else:
+        print "File does not exist. Creating file..."
+        fx = open('JagranLastUrl.txt', 'w')
+        fx.write('http://www.jagran.com/search/news-page2')
+        fx.close()
 
     start_file = open('JagranLastUrl.txt')
     link_url = start_file.read()

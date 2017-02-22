@@ -8,7 +8,7 @@ a = []
 
 if __name__ == "__main__":
     con = MongoClient()
-    db = con.hindi-news_database
+    db = con.hindinews_database
     news = db.news
 
 while True:

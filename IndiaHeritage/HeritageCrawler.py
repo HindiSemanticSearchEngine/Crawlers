@@ -31,9 +31,9 @@ def get_link_from_general_list(link, xPath):
         tree = html.fromstring(page.content)
         links = tree.xpath(xPath)
         get_links_from_list(links)
-    except (requests.ConnectTimeout, requests.ConnectionError) as e:
+    except Exception as e:
         print "Error Occurred: " + str(e)
-        write_logs_to_file(link, False, e)
+        write_logs_to_file(link, False, str(e))
 
 
 def get_link_from_main_page(link):
@@ -49,9 +49,9 @@ def get_link_from_main_page(link):
                     allLinks.add(actualLink)
         print "Got " + str(len(allLinks)) + " links..."
         print ""
-    except (requests.ConnectTimeout, requests.ConnectionError) as e:
+    except Exception as e:
         print "Error Occurred: " + str(e)
-        write_logs_to_file(link, False, e)
+        write_logs_to_file(link, False, str(e))
 
 
 def get_info_from_page(link):
@@ -60,9 +60,9 @@ def get_info_from_page(link):
         print "Getting Page: " + link
         try:
             page = requests.get(link)
-        except (requests.ConnectionError, requests.ConnectTimeout) as e:
+        except Exception as e:
             print "Error Occurred: " + str(e)
-            write_logs_to_file(link, False, e)
+            write_logs_to_file(link, False, str(e))
             return
 
         # TODO: Other Links Relevant to India
@@ -113,8 +113,8 @@ def get_info_from_page(link):
                 table[currentHeading] = currentData
         dataSet['table_content'] = table
         add_to_database(dataSet)
-    except:
-        write_logs_to_file(link, False, 'General Error')
+    except Exception as e:
+        write_logs_to_file(link, False, str(e))
         print "Error in page. Movin' on to next link..."
 
 

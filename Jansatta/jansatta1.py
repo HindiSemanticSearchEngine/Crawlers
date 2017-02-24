@@ -5,7 +5,7 @@ import time
 # List to store all article-urls from each page
 urls = [] 
 
-for i in xrange(315) :
+for i in xrange(1,315) :
     page = requests.get("http://www.jansatta.com/latest-news/page/"+str(i)+"/?s=news")
     time.delay(5)
     tree = html.fromstring(page.content)

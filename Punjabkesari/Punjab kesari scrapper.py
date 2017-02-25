@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import urllib.request
+import time
 
 
 
@@ -13,9 +14,8 @@ for i in range(1,2000):
             url=(k.get('href'))
             r=requests.get(url)
             soup=BeautifulSoup(r.content,"html.parser")
-            for l in soup.find_all('div',class_="story-part"):
-                for g in l.find_all("h2"):
-                    print(g.text)
+            for title in soup.find_all('meta',attrs={'name':"description"}):
+                print(title.get('content'))
             for key in soup.find_all('meta',attrs={"name":"keywords"}):
                                           print(key.get("content"))
             for link in soup.find_all("link",attrs={'rel':"amphtml"}):
@@ -25,3 +25,5 @@ for i in range(1,2000):
                     print(img1.get('src'))
             for date in soup.find_all('meta',attrs={'property':"article:published_time"}):
                 print(date.get('content'))
+            print('\n')
+    time.sleep(5)

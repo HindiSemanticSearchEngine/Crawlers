@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pymongo import MongoClient
 import time
+from datetime import datetime
 
 i = 1
 a = []
@@ -15,6 +16,7 @@ if __name__ == "__main__":
 while True:
     url = "http://www.patrika.com/tags/news&page="+str(i)+"/" # Link of any hindi website here
     re = requests.get(url)
+    #time.sleep(5)	
     soup1 = BeautifulSoup(re.content,"lxml")
     page = soup1.find_all("a",{"class" : "paging"})
     if page == []:
@@ -29,7 +31,7 @@ while True:
 
         for li in a:
             r = requests.get(li)
-            time.delay(5)
+            time.sleep(5)
             soup = BeautifulSoup(r.content,"lxml")
             title = soup.find_all("meta",{"property" : "og:title"})
             img_data = soup.find_all("meta",{"property" : "og:image"})
@@ -47,8 +49,4 @@ while True:
                 news.insert({"News_Title":title_ref,"News_URL":url_ref,"News_Date":date_time,"News_Image":img_ref,"News_Summary":summary_ref,"News_Keywords":keyword})
                 print "Operation Successful"
             print("\n")
-            i = i + 1
-                
-            
-            
-        
+i = i + 1

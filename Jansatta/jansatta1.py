@@ -6,7 +6,7 @@ urls = []
 
 for i in xrange(315) :
     page = requests.get("http://www.jansatta.com/latest-news/page/"+str(i)+"/?s=news")
-    time.delay(5)
+    time.sleep(5)
     tree = html.fromstring(page.content)
     article_urls = tree.xpath('//div[@class="newslistbx"]/h3/a/@href')
     for j in article_urls:
@@ -23,7 +23,7 @@ for k in urls:
 
     #collection.insert({"url":page_url, "title":title})
     print(title)
-    time.delay(5)
+    time.sleep(5)
 
 
 

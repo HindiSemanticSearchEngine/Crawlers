@@ -14,3 +14,5 @@ class ScraperItem(Item):
     des=Field()
     url=Field()
     key=Field()
+    date_published=Field()
+

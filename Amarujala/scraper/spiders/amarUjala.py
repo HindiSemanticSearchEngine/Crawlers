@@ -3,7 +3,7 @@ from scrapy.selector import Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scraper.items import ScraperItem
-
+from datetime import datetime
 class AmarSpider(CrawlSpider):
 	name="amarUjala"
 	allowed_domains =["amarujala.com"]
@@ -21,5 +21,6 @@ class AmarSpider(CrawlSpider):
 		item['des']=Selector(response).xpath('//meta[@name="twitter:description"]/@content').extract()
 		item['key']=Selector(response).xpath('//meta[@name="keywords"]/@content').extract()
 		item['imageUrl']=Selector(response).xpath('//meta[@property="og:image"]/@content').extract()
-
+		date_info=Selector(response).xpath('//span/@datetime').extract()
+		item['date_published']=datetime.strptime(date_info[0],"%Y-%m-%d %H:%M:%S")
 		yield item

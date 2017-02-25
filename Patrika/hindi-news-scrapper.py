@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pymongo import MongoClient
+import time
 
 i = 1
 a = []
@@ -28,6 +29,7 @@ while True:
 
         for li in a:
             r = requests.get(li)
+            time.delay(5)
             soup = BeautifulSoup(r.content,"lxml")
             title = soup.find_all("meta",{"property" : "og:title"})
             img_data = soup.find_all("meta",{"property" : "og:image"})

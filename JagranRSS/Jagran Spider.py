@@ -4,6 +4,7 @@ import hashlib
 from datetime import datetime
 from pymongo import MongoClient
 from re import findall
+import os.path
 
 header = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0'}
 client = MongoClient()
@@ -36,6 +37,7 @@ def write_logs_to_file(url, success, reason):
 
 def get_links_from_page(link, write_to_file):
     print "Getting Page List: " + link
+    # noinspection PyUnusedLocal
     tree = ''
     try:
         page = requests.get(link, headers=header)
@@ -61,6 +63,7 @@ def get_links_from_page(link, write_to_file):
 
 def get_info_from_page(link):
     print "Getting page: " + link
+    # noinspection PyUnusedLocal
     tree = ''
     try:
         page = requests.get(link, headers=header)
@@ -136,6 +139,14 @@ if __name__ == '__main__':
     result = get_links_from_page('http://www.jagran.com/search/news-page', False)
     for j in xrange(0, len(currentPageLinks)):
         get_info_from_page(currentPageLinks[j])
+
+    if os.path.isfile('JagranLastUrl.txt'):
+        print "File exists"
+    else:
+        print "File does not exist. Creating file..."
+        fx = open('JagranLastUrl.txt', 'w')
+        fx.write('http://www.jagran.com/search/news-page2')
+        fx.close()
 
     start_file = open('JagranLastUrl.txt')
     link_url = start_file.read()

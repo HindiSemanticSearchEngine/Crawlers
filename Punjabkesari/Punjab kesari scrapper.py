@@ -1,5 +1,4 @@
 
-
 import requests
 from bs4 import BeautifulSoup
 import urllib.request
@@ -17,8 +16,12 @@ for i in range(1,2000):
             for l in soup.find_all('div',class_="story-part"):
                 for g in l.find_all("h2"):
                     print(g.text)
-            for keywords in soup.find_all("head"):
-                for key in keywords.find_all("meta"):
+            for key in soup.find_all('meta',attrs={"name":"keywords"}):
                                           print(key.get("content"))
-                for link in keywords.find_all("link"):
+            for link in soup.find_all("link",attrs={'rel':"amphtml"}):
                     print(link.get('href'))
+            for img in soup.find_all("span",class_="phot"):
+                for img1 in img.find_all("img"):
+                    print(img1.get('src'))
+            for date in soup.find_all('meta',attrs={'property':"article:published_time"}):
+                print(date.get('content'))

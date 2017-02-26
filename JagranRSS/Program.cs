@@ -113,11 +113,6 @@ namespace WebCrawler
                 foreach (HtmlNode links in htmlDoc.DocumentNode.SelectNodes(validXPath))
                     urlList.Add("http://www.jagran.com" + links.GetAttributeValue("href", ""));
 
-                if (urlList.Count == 0)
-                {
-                    WriteUrlToFile(currentEndUrl);
-                    return false;
-                }
                 if (writeToFile)
                     WriteUrlToFile(link);
                 return true;
@@ -125,7 +120,7 @@ namespace WebCrawler
             catch (Exception e)
             {
                 Console.WriteLine("Exception in getting links from page");
-                Console.Write(e.Message);
+                Console.WriteLine(e.Message);
                 WriteLogsToFile(link, false, e.Message);
                 return false;
             }
@@ -232,7 +227,28 @@ namespace WebCrawler
 
         private static async void MainSimulator()
         {
-            for (int j = 0; j < startUrls.Count; j++)
+            int j = 0;
+            Regex regex = new Regex(@"\d+");
+            if (File.Exists("JagranLastUrl.txt"))
+            {
+                Console.WriteLine("File Exists");
+                string fileContents = File.ReadAllText("JagranLastUrl.txt");
+                fileContents = fileContents.Trim();
+                MatchCollection matches = regex.Matches(fileContents);
+                if (matches[1].Success)
+                    j = int.Parse(matches[1].Value);
+            }
+            else
+            {
+                Console.WriteLine("File does not exist. Creating file...");
+                using (FileStream fs = File.Create("JagranLastUrl.txt"))
+                {
+                    byte[] link = new UTF8Encoding(true).GetBytes(startUrls[j] + pageExtension + "2 0");
+                    fs.Write(link, 0, link.Length);
+                }
+            }
+
+            for (; j < startUrls.Count; j++)
             {
                 if (j == 0)
                 {
@@ -252,34 +268,12 @@ namespace WebCrawler
                     for (int i = 0; i < urlList.Count; i++)
                         await GetInfoFromPage(urlList[i]);
 
-                if (File.Exists("JagranLastUrl.txt"))
-                    Console.WriteLine("File Exists");
-                else
-                {
-                    Console.WriteLine("File does not exist. Creating file...");
-                    using (FileStream fs = File.Create("JagranLastUrl.txt"))
-                    {
-                        byte[] link;
-                        if (j == 0)
-                            link = new UTF8Encoding(true).GetBytes(startUrls[j] + pageExtension + "2");
-                        else
-                            link = new UTF8Encoding(true).GetBytes(startUrls[j] + pageExtension + "2.html");
-                        fs.Write(link, 0, link.Length);
-                    }
-                }
-
                 string fileContents = File.ReadAllText("JagranLastUrl.txt");
                 fileContents = fileContents.Trim();
                 int counter = 2;
-                Regex regex = new Regex(@"\d+");
-                Match match = regex.Match(fileContents);
-                if (match.Success)
-                    counter = int.Parse(match.Value);
-                else
-                {
-                    Console.WriteLine("Match Failed!!!");
-                    return;
-                }
+                MatchCollection match = regex.Matches(fileContents);
+                if (match[0].Success)
+                    counter = int.Parse(match[0].Value);
 
                 while (true)
                 {
@@ -295,8 +289,15 @@ namespace WebCrawler
                         await GetInfoFromPage(urlList[i]);
                     counter++;
                 }
-                Console.WriteLine("First Set of URLs done.");
+                Console.WriteLine("=============================");
+                Console.WriteLine("== First Set of URLs done. ==");
+                Console.WriteLine("=============================");
                 WriteLogsToFile("", true, "");
+                if (j == 3)
+                    currentEndUrl = startUrls[0] + pageExtension + "2 0";
+                else
+                    currentEndUrl = startUrls[j + 1] + pageExtension + "2.html " + (j + 1).ToString();
+                WriteUrlToFile(currentEndUrl);
             }
 
             Console.WriteLine("Wowser. All done!!!");

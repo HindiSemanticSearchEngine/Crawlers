@@ -32,6 +32,7 @@ namespace WebCrawler
 
         private static void Main(string[] args)
         {
+            startUrls = new List<string>();
             startUrls.Add("http://www.jagran.com/search/news");
             startUrls.Add("http://www.jagran.com/news/sports-news-hindi");
             startUrls.Add("http://www.jagran.com/news/national-news-hindi");
@@ -239,11 +240,13 @@ namespace WebCrawler
                 {
                     resultLink = startUrls[j];
                     validXPath = "//ul[@class=\"listing\"]/li/h3/a[@href]";
+                    currentEndUrl = startUrls[j] + pageExtension + "2";
                 }
                 else
                 {
                     resultLink = startUrls[j] + ".html";
                     validXPath = "//ul[@class=\"listing\"]/li/h2/a[@href]";
+                    currentEndUrl = startUrls[j] + pageExtension + "2.html";
                 }
 
                 bool result = await GetLinksFromPage(resultLink, false);

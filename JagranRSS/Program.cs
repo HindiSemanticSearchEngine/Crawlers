@@ -18,6 +18,13 @@ namespace WebCrawler
         protected static IMongoDatabase _database;
         protected static IMongoCollection<NewsData> _collection;
 
+        private static List<string> startUrls;
+        private static string pageExtension = "-page";
+        private static string currentEndUrl;
+        private static string resultLink;
+        private static string validXPath;
+        private static int currentListIndex;
+
         private static List<string> urlList;
         private static HttpClient httpClient;
         private static HtmlDocument htmlDoc;
@@ -25,6 +32,11 @@ namespace WebCrawler
 
         private static void Main(string[] args)
         {
+            startUrls.Add("http://www.jagran.com/search/news");
+            startUrls.Add("http://www.jagran.com/news/sports-news-hindi");
+            startUrls.Add("http://www.jagran.com/news/national-news-hindi");
+            startUrls.Add("http://www.jagran.com/news/world-news-hindi");
+
             _client = new MongoClient("mongodb://localhost");
             _database = _client.GetDatabase("JagranCSharp");
             try
@@ -39,7 +51,11 @@ namespace WebCrawler
             _collection = _database.GetCollection<NewsData>("News");
 
             urlList = new List<string>();
+
             httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("user-agent",
+                "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0");
+
             htmlDoc = new HtmlDocument();
             md5 = new MD5CryptoServiceProvider();
 
@@ -56,6 +72,7 @@ namespace WebCrawler
 
         private static void WriteUrlToFile(string link)
         {
+            Console.WriteLine("Writing URL to file");
             if (!File.Exists("JagranLastUrl.txt"))
                 using (FileStream fs = File.Create("JagranLastUrl.txt")) { };
             File.WriteAllText("JagranLastUrl.txt", link);
@@ -92,14 +109,13 @@ namespace WebCrawler
                 response.EnsureSuccessStatusCode();
                 string pageContent = await response.Content.ReadAsStringAsync();
                 htmlDoc.LoadHtml(pageContent);
-                foreach (HtmlNode links in htmlDoc.DocumentNode.
-                    SelectNodes("//ul[@class=\"listing\"]/li/h3/a[@href]"))
-                {
+
+                foreach (HtmlNode links in htmlDoc.DocumentNode.SelectNodes(validXPath))
                     urlList.Add("http://www.jagran.com" + links.GetAttributeValue("href", ""));
-                }
+
                 if (urlList.Count == 0)
                 {
-                    WriteUrlToFile("http://www.jagran.com/search/news-page2");
+                    WriteUrlToFile(currentEndUrl);
                     return false;
                 }
                 if (writeToFile)
@@ -216,43 +232,70 @@ namespace WebCrawler
 
         private static async void MainSimulator()
         {
-            bool result = await GetLinksFromPage("http://www.jagran.com/search/news-page", false);
-            for (int i = 0; i < urlList.Count; i++)
-                await GetInfoFromPage(urlList[i]);
-            if (File.Exists("JagranLastUrl.txt"))
-                Console.WriteLine("File Exists");
-            else
+            for (int j = 0; j < startUrls.Count; j++)
             {
-                Console.WriteLine("File does not exist. Creating file...");
-                using (FileStream fs = File.Create("JagranLastUrl.txt"))
+                currentListIndex = j;
+                if (j == 0)
                 {
-                    byte[] link = new UTF8Encoding(true).GetBytes("http://www.jagran.com/search/news-page2");
-                    fs.Write(link, 0, link.Length);
+                    resultLink = startUrls[j];
+                    validXPath = "//ul[@class=\"listing\"]/li/h3/a[@href]";
                 }
-            }
+                else
+                {
+                    resultLink = startUrls[j] + ".html";
+                    validXPath = "//ul[@class=\"listing\"]/li/h2/a[@href]";
+                }
 
-            string fileContents = File.ReadAllText("JagranLastUrl.txt");
-            fileContents = fileContents.Trim();
-            int counter = 2;
-            Regex regex = new Regex(@"\d+");
-            Match match = regex.Match(fileContents);
-            if (match.Success)
-                counter = int.Parse(match.Value);
-            else
-            {
-                Console.WriteLine("Match Failed!!!");
-                return;
-            }
+                bool result = await GetLinksFromPage(resultLink, false);
+                if (result)
+                    for (int i = 0; i < urlList.Count; i++)
+                        await GetInfoFromPage(urlList[i]);
 
-            while (true)
-            {
-                result = await GetLinksFromPage("http://www.jagran.com/search/news-page"
-                    + counter.ToString(), true);
-                if (!result)
-                    break;
-                for (int i = 0; i < urlList.Count; i++)
-                    await GetInfoFromPage(urlList[i]);
-                counter++;
+                if (File.Exists("JagranLastUrl.txt"))
+                    Console.WriteLine("File Exists");
+                else
+                {
+                    Console.WriteLine("File does not exist. Creating file...");
+                    using (FileStream fs = File.Create("JagranLastUrl.txt"))
+                    {
+                        byte[] link;
+                        if (j == 0)
+                            link = new UTF8Encoding(true).GetBytes(startUrls[j] + pageExtension + "2");
+                        else
+                            link = new UTF8Encoding(true).GetBytes(startUrls[j] + pageExtension + "2.html");
+                        fs.Write(link, 0, link.Length);
+                    }
+                }
+
+                string fileContents = File.ReadAllText("JagranLastUrl.txt");
+                fileContents = fileContents.Trim();
+                int counter = 2;
+                Regex regex = new Regex(@"\d+");
+                Match match = regex.Match(fileContents);
+                if (match.Success)
+                    counter = int.Parse(match.Value);
+                else
+                {
+                    Console.WriteLine("Match Failed!!!");
+                    return;
+                }
+
+                while (true)
+                {
+                    if (j == 0)
+                        resultLink = startUrls[j] + pageExtension + counter.ToString();
+                    else
+                        resultLink = startUrls[j] + pageExtension + counter.ToString() + ".html";
+
+                    result = await GetLinksFromPage(resultLink, true);
+                    if (!result)
+                        break;
+                    for (int i = 0; i < urlList.Count; i++)
+                        await GetInfoFromPage(urlList[i]);
+                    counter++;
+                }
+                Console.WriteLine("First Set of URLs done.");
+                WriteLogsToFile("", true, "");
             }
 
             Console.WriteLine("Wowser. All done!!!");

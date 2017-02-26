@@ -23,7 +23,6 @@ namespace WebCrawler
         private static string currentEndUrl;
         private static string resultLink;
         private static string validXPath;
-        private static int currentListIndex;
 
         private static List<string> urlList;
         private static HttpClient httpClient;
@@ -235,7 +234,6 @@ namespace WebCrawler
         {
             for (int j = 0; j < startUrls.Count; j++)
             {
-                currentListIndex = j;
                 if (j == 0)
                 {
                     resultLink = startUrls[j];

@@ -2,6 +2,7 @@ import requests
 from lxml import html
 import hashlib
 from datetime import datetime
+from dateutil.parser import parse
 from pymongo import MongoClient
 from re import findall
 import os.path
@@ -11,7 +12,18 @@ client = MongoClient()
 dataBase = client.Jagran
 collection = dataBase.news
 collection.create_index('hash', background=True)
-currentPageLinks = []
+current_page_links = []
+
+valid_xpath = ''
+result_link = ''
+current_end_url = ''
+page_extension = '-page'
+
+start_urls = []
+start_urls.append("http://www.jagran.com/search/news")
+start_urls.append("http://www.jagran.com/news/sports-news-hindi")
+start_urls.append("http://www.jagran.com/news/national-news-hindi")
+start_urls.append("http://www.jagran.com/news/world-news-hindi")
 
 
 def write_url_to_file(link):
@@ -47,15 +59,14 @@ def get_links_from_page(link, write_to_file):
         write_logs_to_file(link, False, str(e))
         return True
 
-    links = tree.xpath('//ul[@class="listing"]/li/h3/a/@href')
+    links = tree.xpath(valid_xpath)
     if len(links) == 0:
-        write_url_to_file('http://www.jagran.com/search/news-page2')
         return False
 
-    global currentPageLinks
-    del currentPageLinks[:]
+    global current_page_links
+    del current_page_links[:]
     for i in xrange(0, len(links)):
-        currentPageLinks.append('http://www.jagran.com' + links[i])
+        current_page_links.append('http://www.jagran.com' + links[i])
     if write_to_file:
         write_url_to_file(link)
     return True
@@ -91,12 +102,16 @@ def get_info_from_page(link):
         last_modified = last_modified[0].encode('utf-8')
         last_modified = last_modified.split('+')
         last_modified = last_modified[0]
-        last_modified = datetime.strptime(last_modified, "%Y-%m-%dT%H:%M:%S")
+        last_modified = parse(last_modified)
 
         summary = tree.xpath('//div[@class="article-summery"]/text()')
         summary = summary[0].encode('utf-8')
+
         meta_description = tree.xpath('//meta[@property="og:description"]/@content')
         meta_description = meta_description[0].encode('utf-8')
+
+        image = tree.xpath('//div[@id="jagran_image_id"]/img/@src')
+        image = image[0]
 
         all_descriptions = tree.xpath('//div[@class="article-content"]/p/text()')
         description = ''
@@ -107,12 +122,15 @@ def get_info_from_page(link):
 
         data_set = {
             'title': title,
+            'meta_title': meta_title,
             'hash': page_hash,
             'description': description,
+            'meta_description': meta_description,
             'summary': summary,
             'last_modified': last_modified,
             'url': url,
-            'keywords': keywords
+            'keywords': keywords,
+            'image': image
         }
         add_to_database(data_set)
     except Exception as e:
@@ -136,33 +154,62 @@ def add_to_database(data_set):
 
 
 if __name__ == '__main__':
-    result = get_links_from_page('http://www.jagran.com/search/news-page', False)
-    for j in xrange(0, len(currentPageLinks)):
-        get_info_from_page(currentPageLinks[j])
-
-    if os.path.isfile('JagranLastUrl.txt'):
-        print "File exists"
+    j = 0
+    if os.path.isFile("JagranLastUrl.txt"):
+        print "File Exists"
+        start_file = open("JagranLastUrl.txt")
+        file_contents = start_file.read()
+        start_file.close()
+        j = int(findall("\d+", file_contents)[1])
     else:
         print "File does not exist. Creating file..."
         fx = open('JagranLastUrl.txt', 'w')
-        fx.write('http://www.jagran.com/search/news-page2')
+        fx.write(start_urls[j] + page_extension + "2 0")
         fx.close()
 
-    start_file = open('JagranLastUrl.txt')
-    link_url = start_file.read()
-    start_file.close()
-    link_url = link_url.strip()
-    link_url = link_url.split('-')
-    link_url = link_url[1]
+    for i in xrange(j, len(start_urls)):
+        if i == 0:
+            result_link = start_urls[i]
+            valid_xpath = "//ul[@class=\"listing\"]/li/h3/a[@href]/@href"
+            current_end_url = start_urls[i] + page_extension + "2"
+        else:
+            result_link = start_urls[i] + ".html"
+            valid_xpath = "//ul[@class=\"listing\"]/li/h2/a[@href]/@href"
+            current_end_url = start_urls[i] + page_extension + "2.html"
 
-    counter = int(findall('\d+', link_url)[0])
-    while True:
-        result = get_links_from_page('http://www.jagran.com/search/news-page' + str(counter), True)
-        if not result:
-            break
-        for j in xrange(0, len(currentPageLinks)):
-            get_info_from_page(currentPageLinks[j])
-        counter += 1
+        result = get_links_from_page(result_link, False)
+        if result:
+            for k in xrange(0, len(current_page_links)):
+                get_info_from_page(current_page_links[k])
+
+        start_file = open("JagranLastUrl.txt")
+        file_contents = start_file.read()
+        counter = 2
+        counter = int(findall("\d+", file_contents)[0])
+
+        while True:
+            if j == 0:
+                result_link = start_urls[i] + page_extension + str(counter)
+            else:
+                result_link = start_urls[i] + page_extension + str(counter) + ".html"
+
+            result = get_links_from_page(result_link, True)
+            if not result:
+                break
+            for k in xrange(0, len(current_page_links)):
+                get_info_from_page(current_page_links[k])
+            counter += 1
+
+            print "======================="
+            print "== Set of URLs done. =="
+            print "======================="
+            write_logs_to_file("", True, "")
+
+            if i == 3:
+                current_end_url = start_urls[0] + page_extension + "2 0"
+            else:
+                current_end_url = start_urls[i + 1] + page_extension + "2.html" + str(i + 1)
+            write_url_to_file(current_end_url)
 
     print "Wowser. All done!!!"
-    write_logs_to_file("", True, "Wowser. All Done!!!")
+    write_logs_to_file("", True, "")

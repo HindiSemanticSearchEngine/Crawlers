@@ -155,7 +155,7 @@ def add_to_database(data_set):
 
 if __name__ == '__main__':
     j = 0
-    if os.path.isFile("JagranLastUrl.txt"):
+    if os.path.isfile("JagranLastUrl.txt"):
         print "File Exists"
         start_file = open("JagranLastUrl.txt")
         file_contents = start_file.read()

@@ -208,7 +208,7 @@ if __name__ == '__main__':
         if i == 3:
             current_end_url = start_urls[0] + page_extension + "2 0"
         else:
-            current_end_url = start_urls[i + 1] + page_extension + "2.html" + str(i + 1)
+            current_end_url = start_urls[i + 1] + page_extension + "2.html " + str(i + 1)
         write_url_to_file(current_end_url)
 
     print "Wowser. All done!!!"

@@ -47,7 +47,7 @@ def write_logs_to_file(url, success, reason):
     fx.close()
 
 
-def get_links_from_page(link, write_to_file):
+def get_links_from_page(link, write_to_file, index):
     print "Getting Page List: " + link
     # noinspection PyUnusedLocal
     tree = ''
@@ -68,7 +68,7 @@ def get_links_from_page(link, write_to_file):
     for i in xrange(0, len(links)):
         current_page_links.append('http://www.jagran.com' + links[i])
     if write_to_file:
-        write_url_to_file(link)
+        write_url_to_file(link + " " + index)
     return True
 
 
@@ -177,7 +177,7 @@ if __name__ == '__main__':
             valid_xpath = "//ul[@class=\"listing\"]/li/h2/a[@href]/@href"
             current_end_url = start_urls[i] + page_extension + "2.html"
 
-        result = get_links_from_page(result_link, False)
+        result = get_links_from_page(result_link, False, str(i))
         if result:
             for k in xrange(0, len(current_page_links)):
                 get_info_from_page(current_page_links[k])
@@ -188,12 +188,12 @@ if __name__ == '__main__':
         counter = int(findall("\d+", file_contents)[0])
 
         while True:
-            if j == 0:
+            if i == 0:
                 result_link = start_urls[i] + page_extension + str(counter)
             else:
                 result_link = start_urls[i] + page_extension + str(counter) + ".html"
 
-            result = get_links_from_page(result_link, True)
+            result = get_links_from_page(result_link, True, str(i))
             if not result:
                 break
             for k in xrange(0, len(current_page_links)):

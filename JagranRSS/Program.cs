@@ -99,7 +99,7 @@ namespace WebCrawler
             }
         }
 
-        private static async Task<bool> GetLinksFromPage(string link, bool writeToFile)
+        private static async Task<bool> GetLinksFromPage(string link, bool writeToFile, int index)
         {
             try
             {
@@ -114,7 +114,7 @@ namespace WebCrawler
                     urlList.Add("http://www.jagran.com" + links.GetAttributeValue("href", ""));
 
                 if (writeToFile)
-                    WriteUrlToFile(link);
+                    WriteUrlToFile(link + " " + index.ToString());
                 return true;
             }
             catch (Exception e)
@@ -263,7 +263,7 @@ namespace WebCrawler
                     currentEndUrl = startUrls[j] + pageExtension + "2.html";
                 }
 
-                bool result = await GetLinksFromPage(resultLink, false);
+                bool result = await GetLinksFromPage(resultLink, false, j);
                 if (result)
                     for (int i = 0; i < urlList.Count; i++)
                         await GetInfoFromPage(urlList[i]);
@@ -282,7 +282,7 @@ namespace WebCrawler
                     else
                         resultLink = startUrls[j] + pageExtension + counter.ToString() + ".html";
 
-                    result = await GetLinksFromPage(resultLink, true);
+                    result = await GetLinksFromPage(resultLink, true, j);
                     if (!result)
                         break;
                     for (int i = 0; i < urlList.Count; i++)

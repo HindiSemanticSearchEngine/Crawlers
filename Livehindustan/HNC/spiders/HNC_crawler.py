@@ -32,8 +32,7 @@ class HncCrawlerSpider(CrawlSpider):
         item['summary'] = Selector(response).xpath('//meta[@name="description"]/@content').extract()
         item['description'] = Selector(response).xpath('//meta[@name="twitter:description"]/@content').extract()
         item['keywords'] = Selector(response).xpath('//meta[@name="keywords"]/@content').extract()
-        dt = Selector(response).xpath('//span[@class="story_float_rigth"]/font/text()').extract()
-        item['date_time'] = dt[1]
+        item['date_time'] = Selector(response).xpath('//meta[@name="article:published_time"]/@content').extract()
         item['image_url'] = Selector(response).xpath('//meta[@property="og:image"]/@content').extract()
 
 

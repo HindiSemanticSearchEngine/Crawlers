@@ -8,11 +8,10 @@ import scrapy
 from scrapy.item import Item,Field
 
 
-class ScraperItem(Item):
+class ndtvItem(Item):
     title = Field()
     imageUrl=Field()
     des=Field()
     url=Field()
     key=Field()
     date_published=Field()
-

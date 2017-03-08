@@ -20,6 +20,6 @@ class AmarSpider(CrawlSpider):
 		item['title']=Selector(response).xpath('//meta[@name="twitter:title"]/@content').extract()
 		item['des']=Selector(response).xpath('//meta[@name="twitter:description"]/@content').extract()
 		item['key']=Selector(response).xpath('//meta[@name="keywords"]/@content').extract()
-		item['imageUrl']=Selector(response).xpath('//meta[@property="og:image"]/@content').extract()
+		item['imageUrl']=Selector(response).xpath('//meta[@name="twitter:image"]/@content').extract()
 
 		yield item

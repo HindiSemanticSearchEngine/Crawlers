@@ -6,7 +6,7 @@ import time
 
 
 
-for i in range(1,2000):
+for i in range(1,5200):
     r=requests.get("http://www.punjabkesari.in/latest.aspx?pageno=" + str(i))
     soup = BeautifulSoup(r.content,"html.parser")
     for j in soup.find_all("h2"):
